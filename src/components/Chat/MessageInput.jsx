@@ -1,6 +1,5 @@
 import React, { useRef, useState } from 'react';
 
-// 1. DANH SÁCH STICKER MẪU (Bạn có thể thay bằng link ảnh mèo, chó tùy thích)
 const STICKERS = [
     "https://cdn-icons-png.flaticon.com/512/4712/4712109.png", // Like
     "https://cdn-icons-png.flaticon.com/512/4712/4712009.png", // Heart
@@ -15,22 +14,13 @@ function MessageInput({ newMessage, onNewMessageChange, onSendMessage, onSendIma
     const mediaRecorderRef = useRef(null);
     const audioChunksRef = useRef([]);
 
-    // --- XỬ LÝ CHỌN FILE (ẢNH/VIDEO) ---
     const handleFileSelect = (e) => {
         const file = e.target.files[0];
         if (file) onSendImage(file);
     };
 
-    // --- XỬ LÝ GỬI STICKER ---
     const handleSendSticker = (stickerUrl) => {
-        // Gửi sticker thực chất là gửi cái link ảnh đó đi thôi
-        // Ta dùng hàm onSendImage (dù tên là image nhưng nó xử lý gửi file/link)
-        // Tuy nhiên, onSendImage của bạn đang mong đợi 1 FILE object để upload Cloudinary.
-        // TRICK: Ta có thể fetch link đó về thành Blob -> File rồi gửi,
-        // HOẶC sửa Chat.jsx để nhận URL trực tiếp.
 
-        // Cách đơn giản nhất: Gửi URL sticker như một tin nhắn Text
-        // Nhưng để Chat.jsx xử lý đồng bộ, ta nên fetch nó thành file blob rồi gửi upload (hơi thừa nhưng an toàn với code cũ)
         fetch(stickerUrl)
             .then(res => res.blob())
             .then(blob => {
@@ -40,7 +30,6 @@ function MessageInput({ newMessage, onNewMessageChange, onSendMessage, onSendIma
             });
     };
 
-    // --- XỬ LÝ GHI ÂM (VOICE) ---
     const startRecording = async () => {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -54,14 +43,11 @@ function MessageInput({ newMessage, onNewMessageChange, onSendMessage, onSendIma
             };
 
             mediaRecorderRef.current.onstop = () => {
-                // Tạo file audio từ các chunk
                 const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
                 const audioFile = new File([audioBlob], "voice_message.webm", { type: 'audio/webm' });
 
-                // Gửi file audio này lên Cloudinary
                 onSendImage(audioFile);
 
-                // Tắt stream mic
                 stream.getTracks().forEach(track => track.stop());
             };
 
@@ -83,7 +69,6 @@ function MessageInput({ newMessage, onNewMessageChange, onSendMessage, onSendIma
     return (
         <div className="message-input-container" style={{position: 'relative'}}>
 
-            {/* KHUNG CHỌN STICKER */}
             {showStickers && (
                 <div style={{
                     position: 'absolute', bottom: '60px', left: '10px',
@@ -109,7 +94,6 @@ function MessageInput({ newMessage, onNewMessageChange, onSendMessage, onSendIma
                     onChange={handleFileSelect}
                 />
 
-                {/* 1. NÚT CHỌN ẢNH/VIDEO */}
                 <button
                     type="button"
                     className="btn-icon"
@@ -120,7 +104,6 @@ function MessageInput({ newMessage, onNewMessageChange, onSendMessage, onSendIma
                     📷
                 </button>
 
-                {/* 2. NÚT STICKER */}
                 <button
                     type="button"
                     className="btn-icon"
@@ -131,7 +114,6 @@ function MessageInput({ newMessage, onNewMessageChange, onSendMessage, onSendIma
                     😜
                 </button>
 
-                {/* 3. NÚT GHI ÂM (Nhấn giữ hoặc click bật/tắt) */}
                 <button
                     type="button"
                     className="btn-icon"
@@ -142,7 +124,7 @@ function MessageInput({ newMessage, onNewMessageChange, onSendMessage, onSendIma
                         border: 'none',
                         fontSize: '1.2rem',
                         cursor: 'pointer',
-                        color: isRecording ? 'red' : 'inherit', // Đỏ khi đang ghi âm
+                        color: isRecording ? 'red' : 'inherit',
                         animation: isRecording ? 'pulse 1s infinite' : 'none'
                     }}
                     title={isRecording ? "Dừng ghi âm" : "Ghi âm"}
@@ -150,14 +132,13 @@ function MessageInput({ newMessage, onNewMessageChange, onSendMessage, onSendIma
                     {isRecording ? '⏹️' : '🎙️'}
                 </button>
 
-                {/* INPUT TEXT */}
                 <input
                     type="text"
                     placeholder={isRecording ? "Đang ghi âm..." : "Nhập tin nhắn..."}
                     value={newMessage}
                     onChange={(e) => onNewMessageChange(e.target.value)}
                     className="message-input"
-                    disabled={isRecording} // Khóa nhập khi đang ghi âm
+                    disabled={isRecording}
                 />
 
                 <button type="submit" className="btn-send" disabled={isRecording}>
@@ -165,7 +146,6 @@ function MessageInput({ newMessage, onNewMessageChange, onSendMessage, onSendIma
                 </button>
             </form>
 
-            {/* CSS Animation cho nút ghi âm (Thêm vào file css hoặc style inline) */}
             <style>{`
                 @keyframes pulse {
                     0% { transform: scale(1); }
@@ -178,4 +158,3 @@ function MessageInput({ newMessage, onNewMessageChange, onSendMessage, onSendIma
 }
 
 export default MessageInput;
-// fix lỗi không nhận input text
